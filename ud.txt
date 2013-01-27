@@ -1,0 +1,93 @@
+def split_string(source,splitlist):
+    s=""
+    l=[]
+    for i in source:
+        if i in splitlist:
+                   if s:l.append(s)
+                   s=""
+        else:
+            s+=i
+    if s:l.append(s)
+    return l 
+
+def crawl_web(seed,max_depth):
+    tocrawl = [seed]
+    crawled = []
+    next_depth=[]
+    depth=0
+    while tocrawl and depth<=max_depth :
+        page = tocrawl.pop()
+        if page not in crawled :
+            union(next_depth,get_all_links(get_page(page)))
+            crawled.append(page)   
+        if not tocrawl:
+            tocrawl,next_depth=next_depth,[]
+            depth+=1
+
+def union(a, b):
+    for e in b:
+        if e not in a:
+            a.append(e)
+
+def get_next_target(page):
+    start_link = page.find('<a href=')
+    if start_link == -1:
+        return None, 0
+    start_quote = page.find('"', start_link)
+    end_quote = page.find('"', start_quote + 1)
+    url = page[start_quote + 1:end_quote]
+    return url, end_quote
+
+def get_all_links(page):
+    links = []
+    while True:
+        url, endpos = get_next_target(page)
+        if url:
+            links.append(url)
+            page = page[endpos:]
+        else:
+            break
+    return links
+
+def crawl_web(seed):
+    tocrawl = [seed]
+    crawled = []
+    index = []
+    while tocrawl:
+        page = tocrawl.pop()
+        if page not in crawled:
+            content = get_page(page)
+            add_page_to_index(index, page, content)
+            union(tocrawl, get_all_links(content))
+            crawled.append(page)
+    return index
+
+def add_page_to_index(index, url, content):
+    words = content.split()
+    for word in words:
+        add_to_index(index, word, url)
+
+def lookup(index, keyword):
+    for entry in index:
+        if entry[0] == keyword:
+            return entry[1]
+    return None
+
+#index = crawl_web("http://www.udacity.com/cs101x/index.html")
+#print lookup(index,"is")
+#>>> ['http://www.udacity.com/cs101x/index.html']    
+
+
+
+def getpage(url):
+    import urllib2
+    resp = urllib2.urlopen(url)
+    return resp.read()
+
+
+def get_page(url):
+   try:
+      import urllib
+      return urllib.urlopen(url)
+   except:
+       return ""
